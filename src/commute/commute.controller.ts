@@ -14,4 +14,9 @@ export class CommuteController {
       message: 'successfully create dummy',
     };
   }
+
+  @Post()
+  async commute() {
+    
+  }
 }

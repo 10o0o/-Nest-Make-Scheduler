@@ -13,17 +13,24 @@ export class CommuteService {
   }
 
   async seeding() {
-    const staffs = staff;
+    const returnDataObj = {
+      addStaffs: [],
+      alreadyExistStaffs: [],
+    };
+    const newStaffs = staff;
 
-    for (const staff of staffs) {
-      const person = this.staffRepository.findOne({ s_nm: staff.s_nm });
+    for (const staff of newStaffs) {
+      const person = await this.staffRepository.findOne({ s_nm: staff.s_nm });
 
       if (!person) {
         await this.staffRepository.save(staff);
+        returnDataObj.addStaffs.push(staff);
+      } else {
+        returnDataObj.alreadyExistStaffs.push(staff);
       }
     }
 
-    return staffs;
+    return returnDataObj;
   }
 
   findAll() {
