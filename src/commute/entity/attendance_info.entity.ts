@@ -2,8 +2,8 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   OneToOne,
-  JoinColumn,
   CreateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { tbl_staff } from './staff.entity';
 
@@ -20,5 +20,5 @@ export class tbl_attendance_info {
 
   @OneToOne(() => tbl_staff)
   @JoinColumn()
-  tbl_staff: tbl_staff;
+  staff: tbl_staff;
 }

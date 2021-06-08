@@ -1,13 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { staff } from './data/data';
+import { tbl_attendance_info } from './entity/attendance_info.entity';
 import { tbl_staff } from './entity/staff.entity';
 
 @Injectable()
 export class CommuteService {
   constructor(
     @InjectRepository(tbl_staff) private staffRepository: Repository<tbl_staff>,
+    @InjectRepository(tbl_attendance_info)
+    private attendanceRepository: Repository<tbl_attendance_info>,
   ) {
     this.staffRepository = staffRepository;
   }
@@ -33,15 +36,27 @@ export class CommuteService {
     return returnDataObj;
   }
 
-  findAll() {
-    return `This action returns all commute`;
-  }
+  async checkCommute(staff_name) {
+    const staff = await this.staffRepository.findOne({ s_nm: staff_name });
 
-  findOne(id: number) {
-    return `This action returns a #${id} commute`;
-  }
+    if (!staff) throw new NotFoundException('등록되지 않은 직원입니다.');
 
-  remove(id: number) {
-    return `This action removes a #${id} commute`;
+    const isCommute = await this.attendanceRepository.findOne({ staff });
+
+    if (isCommute) {
+      return {
+        data: staff,
+        message: '이미 출근하셨습니다.',
+      };
+    }
+
+    await this.attendanceRepository.save({
+      staff,
+    });
+
+    return {
+      data: staff,
+      message: '성공적으로 출근했습니다.',
+    };
   }
 }

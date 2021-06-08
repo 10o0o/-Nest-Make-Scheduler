@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { BadRequestException, Controller, Post, Request } from '@nestjs/common';
 import { CommuteService } from './commute.service';
 
 @Controller('commute')
@@ -16,7 +16,11 @@ export class CommuteController {
   }
 
   @Post()
-  async commute() {
-    
+  async commute(@Request() req) {
+    if (!req.body.name) {
+      throw new BadRequestException('name을 입력해 주세요');
+    }
+
+    return await this.commuteService.checkCommute(req.body.name);
   }
 }
