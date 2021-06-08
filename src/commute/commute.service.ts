@@ -3,6 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { CronJob } from 'cron';
+const moment = require('moment');
 import { Repository } from 'typeorm';
 import { staff } from './data/data';
 import { tbl_attendance_info } from './entity/attendance_info.entity';
@@ -14,9 +15,14 @@ export class CommuteService {
     @InjectRepository(tbl_staff) private staffRepository: Repository<tbl_staff>,
     @InjectRepository(tbl_attendance_info)
     private attendanceRepository: Repository<tbl_attendance_info>,
-    private schedulerRegistry: SchedulerRegistry
+    private schedulerRegistry: SchedulerRegistry,
   ) {
     this.staffRepository = staffRepository;
+    this.load();
+  }
+
+  load() {
+    this.checkRemainCommute();
   }
 
   async seeding() {
@@ -59,9 +65,20 @@ export class CommuteService {
     });
 
     // this.offWork(staff);
-    setTimeout(async () => {
-      await this.offWork(staff);
-    }, 10000);
+    // setTimeout(async () => {
+    //   await this.offWork(staff);
+    // }, 10000);
+    const cronName = staff_name;
+    const date = moment().add(10, 'second');
+
+    this.addCronJob(cronName, date, async () => {
+      try {
+        await this.offWork(staff);
+      } catch (e) {
+        console.error(e);
+      }
+    });
+    console.log(`${staff_name} 스케출러 등록 완료!`);
 
     return {
       data: staff,
@@ -105,6 +122,18 @@ export class CommuteService {
         }
       } catch (e) {
         console.error(e);
+      }
+    });
+  }
+
+  async checkRemainCommute() {
+    const remainCommuteLists = await this.attendanceRepository.find();
+
+    remainCommuteLists.forEach((commuteOne) => {
+      if (commuteOne.attendance_dt > moment().subtract(1, 'minutes')) {
+        this.attendanceRepository.delete({ ri_id: commuteOne.ri_id });
+      } else {
+        
       }
     });
   }

@@ -28,6 +28,7 @@
     "@nestjs/schedule": "^0.4.3",
     "@nestjs/typeorm": "^7.1.5",
     "axios": "^0.21.1",
+    "moment": "^2.29.1",
     "mysql2": "^2.2.5",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
