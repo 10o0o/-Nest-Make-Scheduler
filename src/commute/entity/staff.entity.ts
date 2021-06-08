@@ -1,9 +1,10 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Staff } from '../interface/staffs.interface';
 
 @Entity()
-export class tbl_staff {
+export class tbl_staff implements Staff {
   @PrimaryGeneratedColumn()
-  s_id: Number;
+  s_id: number;
 
   @Column({
     length: 50,

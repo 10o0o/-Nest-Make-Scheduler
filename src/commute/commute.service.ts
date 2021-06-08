@@ -1,11 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCommuteDto } from './dto/create-commute.dto';
-import { UpdateCommuteDto } from './dto/update-commute.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { staff } from './data/data';
+import { tbl_staff } from './entity/staff.entity';
 
 @Injectable()
 export class CommuteService {
-  create(createCommuteDto: CreateCommuteDto) {
-    return 'This action adds a new commute';
+  constructor(
+    @InjectRepository(tbl_staff) private staffRepository: Repository<tbl_staff>,
+  ) {
+    this.staffRepository = staffRepository;
+  }
+
+  async seeding() {
+    const staffs = staff;
+
+    for (const staff of staffs) {
+      const person = this.staffRepository.findOne({ s_nm: staff.s_nm });
+
+      if (!person) {
+        await this.staffRepository.save(staff);
+      }
+    }
+
+    return staffs;
   }
 
   findAll() {
@@ -14,10 +32,6 @@ export class CommuteService {
 
   findOne(id: number) {
     return `This action returns a #${id} commute`;
-  }
-
-  update(id: number, updateCommuteDto: UpdateCommuteDto) {
-    return `This action updates a #${id} commute`;
   }
 
   remove(id: number) {
