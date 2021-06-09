@@ -3,6 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { CronJob } from 'cron';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const moment = require('moment');
 import { Repository } from 'typeorm';
 import { staff } from './data/data';
@@ -56,7 +57,7 @@ export class CommuteService {
     if (isCommute) {
       return {
         data: staff,
-        message: '이미 출근하셨습니다.',
+        message: '이미 출근한 사람입니다.',
       };
     }
 
@@ -68,6 +69,7 @@ export class CommuteService {
     // setTimeout(async () => {
     //   await this.offWork(staff);
     // }, 10000);
+
     const cronName = staff_name;
     const date = moment().add(10, 'second');
 
@@ -78,6 +80,7 @@ export class CommuteService {
         console.error(e);
       }
     });
+
     console.log(`${staff_name} 스케출러 등록 완료!`);
 
     return {
@@ -105,8 +108,10 @@ export class CommuteService {
   addCronJob(cronName: string, date: moment.Moment, callback: () => void) {
     try {
       const job = new CronJob(date, callback);
-      this.deleteCron(cronName);
+
+      // console.log(job)
       this.schedulerRegistry.addCronJob(cronName, job);
+      this.deleteCron(cronName);
       job.start();
     } catch (error) {
       console.error(error);
@@ -114,8 +119,14 @@ export class CommuteService {
   }
 
   deleteCron(cronName: string) {
+    console.log('cronName', cronName);
+    // object array타입 map 타입이 뭔지??
     const jobs = this.schedulerRegistry.getCronJobs();
-    jobs.forEach((value, key) => {
+    console.log('jobs', jobs);
+    jobs.forEach((value, key, m) => {
+      console.log('value', value);
+      console.log('key', key);
+      console.log('m', m);
       try {
         if (key === cronName) {
           this.schedulerRegistry.deleteCronJob(cronName);
@@ -133,7 +144,16 @@ export class CommuteService {
       if (commuteOne.attendance_dt > moment().subtract(1, 'minutes')) {
         this.attendanceRepository.delete({ ri_id: commuteOne.ri_id });
       } else {
-        
+        const cronName = commuteOne.staff.s_nm;
+        const date = moment().add(10, 'second');
+
+        this.addCronJob(cronName, date, async () => {
+          try {
+            await this.offWork(staff);
+          } catch (e) {
+            console.error(e);
+          }
+        });
       }
     });
   }
