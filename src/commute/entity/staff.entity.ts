@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToOne } from 'typeorm';
 import { Staff } from '../interface/staffs.interface';
 import { tbl_attendance_info } from './attendance_info.entity';
+import { tbl_attendance_log } from './attendance_log.entity';
 
 @Entity()
 export class tbl_staff implements Staff {
@@ -17,5 +18,8 @@ export class tbl_staff implements Staff {
   s_nm: string;
 
   @OneToOne(() => tbl_attendance_info, (attendance) => attendance.staff)
-  staff: tbl_staff;
+  staff1: tbl_staff;
+
+  @OneToOne(() => tbl_attendance_log, (attendance) => attendance.staff)
+  staff2: tbl_staff;
 }

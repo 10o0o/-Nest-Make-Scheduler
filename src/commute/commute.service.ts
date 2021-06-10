@@ -65,11 +65,6 @@ export class CommuteService {
       staff,
     });
 
-    // this.offWork(staff);
-    // setTimeout(async () => {
-    //   await this.offWork(staff);
-    // }, 10000);
-
     const cronName = staff_name;
     const date = moment().add(10, 'second');
 
@@ -81,7 +76,7 @@ export class CommuteService {
       }
     });
 
-    console.log(`${staff_name} 스케출러 등록 완료!`);
+    console.log(`${staff_name} 스케줄러 등록 완료!`);
 
     return {
       data: staff,
@@ -123,10 +118,9 @@ export class CommuteService {
     // object array타입 map 타입이 뭔지??
     const jobs = this.schedulerRegistry.getCronJobs();
     console.log('jobs', jobs);
-    jobs.forEach((value, key, m) => {
+    jobs.forEach((value, key) => {
       console.log('value', value);
       console.log('key', key);
-      console.log('m', m);
       try {
         if (key === cronName) {
           this.schedulerRegistry.deleteCronJob(cronName);

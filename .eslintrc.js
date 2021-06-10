@@ -1,9 +1,9 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: 'tsconfig.json',
+    project: './tsconfig.json',
     sourceType: 'module',
-    tsconfigRootDir: './make-scheduler'
+    tsconfigRootDir: '.'
   },
   plugins: ['@typescript-eslint/eslint-plugin'],
   extends: [
