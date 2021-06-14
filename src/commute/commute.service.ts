@@ -25,7 +25,7 @@ export class CommuteService {
     this.load();
   }
 
-  load() {
+  private load() {
     this.checkRemainCommute();
   }
 
@@ -73,7 +73,7 @@ export class CommuteService {
       // .where('staffSid = :id', { id: staff.s_id })
       .getRawMany();
 
-    console.log('이거뜸? :', test);
+    // console.log('이거뜸? :', test);
 
     const cronName = staff_name;
     const date = moment().add(10, 'second');
@@ -101,7 +101,7 @@ export class CommuteService {
       .where('staffSid = :id', { id: staff.s_id })
       .getOne();
 
-    console.log('attendance_dt :', attendance_dt.attendance_dt);
+    // console.log('attendance_dt :', attendance_dt.attendance_dt);
 
     const newLog = this.attendanceLogRepository.create();
     newLog.staff = staff;
@@ -125,7 +125,11 @@ export class CommuteService {
     console.log(`${staff.s_nm} 퇴근시간`);
   }
 
-  addCronJob(cronName: string, date: moment.Moment, callback: () => void) {
+  private addCronJob(
+    cronName: string,
+    date: moment.Moment,
+    callback: () => void,
+  ) {
     try {
       const job = new CronJob(date, callback);
 
@@ -138,7 +142,7 @@ export class CommuteService {
     }
   }
 
-  deleteCron(cronName: string) {
+  private deleteCron(cronName: string) {
     const jobs = this.schedulerRegistry.getCronJobs();
     jobs.forEach((value, key) => {
       try {
