@@ -1,0 +1,13 @@
+{
+  "type": "mysql",
+  "host": "localhost",
+  "port": 3306,
+  "username": "root",
+  "database": "TEST_makeScheduler",
+  "synchronize": false,
+  "logging": false,
+  "migrations": [
+     "dist/1623301145511-testMigration.js"
+  ],
+  "autoSchemaSync": false
+}

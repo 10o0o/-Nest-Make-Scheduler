@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  OneToMany,
+} from 'typeorm';
 import { Staff } from '../interface/staffs.interface';
 import { tbl_attendance_info } from './attendance_info.entity';
 import { tbl_attendance_log } from './attendance_log.entity';
@@ -20,6 +26,6 @@ export class tbl_staff implements Staff {
   @OneToOne(() => tbl_attendance_info, (attendance) => attendance.staff)
   staff1: tbl_staff;
 
-  @OneToOne(() => tbl_attendance_log, (attendance) => attendance.staff)
-  staff2: tbl_staff;
+  @OneToMany(() => tbl_attendance_log, (log) => log.staff)
+  log: tbl_staff[];
 }

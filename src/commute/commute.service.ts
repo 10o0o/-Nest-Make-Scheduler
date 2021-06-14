@@ -8,6 +8,7 @@ const moment = require('moment');
 import { Repository } from 'typeorm';
 import { staff } from './data/data';
 import { tbl_attendance_info } from './entity/attendance_info.entity';
+import { tbl_attendance_log } from './entity/attendance_log.entity';
 import { tbl_staff } from './entity/staff.entity';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class CommuteService {
     @InjectRepository(tbl_staff) private staffRepository: Repository<tbl_staff>,
     @InjectRepository(tbl_attendance_info)
     private attendanceRepository: Repository<tbl_attendance_info>,
+    @InjectRepository(tbl_attendance_log)
+    private attendanceLogRepository: Repository<tbl_attendance_log>,
     private schedulerRegistry: SchedulerRegistry,
   ) {
     this.staffRepository = staffRepository;
@@ -65,6 +68,13 @@ export class CommuteService {
       staff,
     });
 
+    const test = await this.attendanceRepository
+      .createQueryBuilder('attendance')
+      // .where('staffSid = :id', { id: staff.s_id })
+      .getRawMany();
+
+    console.log('이거뜸? :', test);
+
     const cronName = staff_name;
     const date = moment().add(10, 'second');
 
@@ -85,6 +95,21 @@ export class CommuteService {
   }
 
   async offWork(staff) {
+    const attendance_dt = await this.attendanceRepository
+      .createQueryBuilder('attendance')
+      .select('attendance.attendance_dt')
+      .where('staffSid = :id', { id: staff.s_id })
+      .getOne();
+
+    console.log('attendance_dt :', attendance_dt.attendance_dt);
+
+    const newLog = this.attendanceLogRepository.create();
+    newLog.staff = staff;
+    newLog.attendance_dt = attendance_dt.attendance_dt;
+    newLog.commute_dt = new Date();
+
+    await this.attendanceLogRepository.save(newLog);
+
     await this.attendanceRepository.delete({ staff });
     await axios({
       method: 'post',
@@ -114,13 +139,8 @@ export class CommuteService {
   }
 
   deleteCron(cronName: string) {
-    console.log('cronName', cronName);
-    // object array타입 map 타입이 뭔지??
     const jobs = this.schedulerRegistry.getCronJobs();
-    console.log('jobs', jobs);
     jobs.forEach((value, key) => {
-      console.log('value', value);
-      console.log('key', key);
       try {
         if (key === cronName) {
           this.schedulerRegistry.deleteCronJob(cronName);
@@ -132,17 +152,36 @@ export class CommuteService {
   }
 
   async checkRemainCommute() {
-    const remainCommuteLists = await this.attendanceRepository.find();
+    const remainCommuteLists = await this.attendanceRepository
+      .createQueryBuilder('attendance')
+      .getRawMany();
+    // console.log(remainCommuteLists);
 
-    remainCommuteLists.forEach((commuteOne) => {
-      if (commuteOne.attendance_dt > moment().subtract(1, 'minutes')) {
-        this.attendanceRepository.delete({ ri_id: commuteOne.ri_id });
+    remainCommuteLists.forEach(async (commuteOne) => {
+      // console.log(moment(Date.parse(commuteOne.attendance_attendance_dt)), moment().subtract(1, 'minutes'));
+      console.log(commuteOne);
+      if (
+        commuteOne.attendance_attendance_dt < moment().subtract(10, 'hours')
+      ) {
+        this.attendanceRepository.delete({
+          ri_id: commuteOne.attendance_ri_id,
+        });
       } else {
-        const cronName = commuteOne.staff.s_nm;
+        // console.log(commuteOne.attendance_attendance_dt, moment().subtract(1, 'minutes'));
+        const cronName = await this.staffRepository
+          .createQueryBuilder('staff')
+          .select('staff.s_nm')
+          .where('staff.s_id = :id', { id: commuteOne.attendance_staffSId })
+          .getOne();
+
+        console.log('크론이름 :', cronName);
         const date = moment().add(10, 'second');
 
-        this.addCronJob(cronName, date, async () => {
+        this.addCronJob(cronName.s_nm, date, async () => {
           try {
+            const staff = await this.staffRepository.findOne({
+              s_nm: cronName.s_nm,
+            });
             await this.offWork(staff);
           } catch (e) {
             console.error(e);
