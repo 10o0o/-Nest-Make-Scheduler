@@ -5,7 +5,7 @@ import axios from 'axios';
 import { CronJob } from 'cron';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const moment = require('moment');
-import { Repository } from 'typeorm';
+import { getConnection, getConnectionOptions, Repository } from 'typeorm';
 import { staff } from './data/data';
 import { tbl_attendance_info } from './entity/attendance_info.entity';
 import { tbl_attendance_log } from './entity/attendance_log.entity';
@@ -21,7 +21,6 @@ export class CommuteService {
     private attendanceLogRepository: Repository<tbl_attendance_log>,
     private schedulerRegistry: SchedulerRegistry,
   ) {
-    this.staffRepository = staffRepository;
     this.load();
   }
 
@@ -50,6 +49,8 @@ export class CommuteService {
     return returnDataObj;
   }
 
+  // 퇴근하자마자 실수로 출근 한번 더 처리
+  // 퇴근 포스트
   async checkCommute(staff_name) {
     const staff = await this.staffRepository.findOne({ s_nm: staff_name });
 
@@ -64,19 +65,20 @@ export class CommuteService {
       };
     }
 
-    await this.attendanceRepository.save({
+    const test = await this.attendanceRepository.save({
       staff,
     });
+    console.log('test:', test);
 
-    const test = await this.attendanceRepository
-      .createQueryBuilder('attendance')
-      // .where('staffSid = :id', { id: staff.s_id })
-      .getRawMany();
+    // const test = await this.attendanceRepository
+    // .createQueryBuilder('attendance')
+    // .where('staffSid = :id', { id: staff.s_id })
+    // .getRawMany();
 
     // console.log('이거뜸? :', test);
 
     const cronName = staff_name;
-    const date = moment().add(10, 'second');
+    const date = moment().add(30, 'second');
 
     this.addCronJob(cronName, date, async () => {
       try {
@@ -109,7 +111,6 @@ export class CommuteService {
     newLog.commute_dt = new Date();
 
     await this.attendanceLogRepository.save(newLog);
-
     await this.attendanceRepository.delete({ staff });
     await axios({
       method: 'post',
@@ -165,7 +166,7 @@ export class CommuteService {
       // console.log(moment(Date.parse(commuteOne.attendance_attendance_dt)), moment().subtract(1, 'minutes'));
       console.log(commuteOne);
       if (
-        commuteOne.attendance_attendance_dt < moment().subtract(10, 'hours')
+        commuteOne.attendance_attendance_dt < moment().subtract(30, 'seconds')
       ) {
         this.attendanceRepository.delete({
           ri_id: commuteOne.attendance_ri_id,
@@ -179,7 +180,7 @@ export class CommuteService {
           .getOne();
 
         console.log('크론이름 :', cronName);
-        const date = moment().add(10, 'second');
+        const date = moment().add(30, 'second');
 
         this.addCronJob(cronName.s_nm, date, async () => {
           try {
@@ -193,5 +194,23 @@ export class CommuteService {
         });
       }
     });
+  }
+
+  async update(userInfo) {
+    const user = await this.staffRepository.findOne({
+      s_nm: userInfo.name,
+    });
+
+    user.s_nm = userInfo.changeName;
+
+    const test = await this.staffRepository.save(user);
+    // console.log(user)
+
+    // const test = await this.staffRepository.update(
+    //   { s_nm: userInfo.name },
+    //   { s_nm: userInfo.changeName },
+    // );
+
+    console.log(test);
   }
 }
