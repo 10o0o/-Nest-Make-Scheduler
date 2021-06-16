@@ -24,9 +24,9 @@ export class CommuteController {
 
   @Post()
   async commute(@Req() req, @Res() res) {
-    if (!req.body.name) {
-      throw new BadRequestException('name을 입력해 주세요');
-    }
+    // if (!req.body.name) {
+    //   throw new BadRequestException('name을 입력해 주세요');
+    // }
 
     const returndata = await this.commuteService.checkCommute(req.body.name);
 
