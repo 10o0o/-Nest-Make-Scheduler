@@ -112,8 +112,6 @@ export class CommuteService {
         .where('staffSid = :id', { id: staff.s_id })
         .getOne();
 
-      // console.log('attendance_dt :', attendance_dt.attendance_dt);
-
       const newLog = manager.create(tbl_attendance_log);
       newLog.staff = staff;
       newLog.attendance_dt = attendance_dt.attendance_dt;
@@ -148,7 +146,6 @@ export class CommuteService {
     try {
       const job = new CronJob(date, callback);
 
-      // console.log(job)
       this.schedulerRegistry.addCronJob(cronName, job);
       this.deleteCron(cronName);
       job.start();
@@ -174,10 +171,8 @@ export class CommuteService {
     const remainCommuteLists = await this.attendanceRepository
       .createQueryBuilder('attendance')
       .getRawMany();
-    // console.log(remainCommuteLists);
 
     remainCommuteLists.forEach(async (commuteOne) => {
-      // console.log(moment(Date.parse(commuteOne.attendance_attendance_dt)), moment().subtract(1, 'minutes'));
       console.log(commuteOne);
       if (
         commuteOne.attendance_attendance_dt < moment().subtract(5, 'seconds')
@@ -186,7 +181,6 @@ export class CommuteService {
           ri_id: commuteOne.attendance_ri_id,
         });
       } else {
-        // console.log(commuteOne.attendance_attendance_dt, moment().subtract(1, 'minutes'));
         const cronName = await this.staffRepository
           .createQueryBuilder('staff')
           .select('staff.s_nm')
